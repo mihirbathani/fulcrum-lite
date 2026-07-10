@@ -25,9 +25,18 @@ Fulcrum Lite drops the advanced tools — non-destructive mode, custom move/rota
 2. Right-click your `.uproject` → **Generate Visual Studio project files**, then build — or just open the project and let the editor compile it.
 3. Open the tool from **Tools → Fulcrum Lite**.
 
+## Engine versions
+
+This plugin is maintained per engine version on separate branches:
+
+- [`5.6`](../../tree/5.6) — Unreal Engine 5.6
+- [`5.8`](../../tree/5.8) — Unreal Engine 5.8
+
+Check out the branch that matches your engine. `main` holds the shared source.
+
 ## Requirements
 
-- Unreal Engine **5.8** (built and tested against 5.8)
+- Unreal Engine **5.6** or **5.8** (see the branch matching your version)
 - A C++ toolchain (Visual Studio 2022) is required to build from source.
 
 ## Author
