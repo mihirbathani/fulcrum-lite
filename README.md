@@ -34,9 +34,11 @@ This plugin is maintained per engine version on separate branches:
 
 Check out the branch that matches your engine. `main` holds the shared source.
 
+**You are on the `5.6` branch — built and tested against Unreal Engine 5.6.**
+
 ## Requirements
 
-- Unreal Engine **5.6** or **5.8** (see the branch matching your version)
+- Unreal Engine **5.6**
 - A C++ toolchain (Visual Studio 2022) is required to build from source.
 
 ## Author
