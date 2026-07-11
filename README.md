@@ -21,7 +21,31 @@ Fulcrum Lite drops the advanced tools — non-destructive mode, custom move/rota
 
 ## Installation
 
-1. Copy this plugin into your project's `Plugins/` folder, e.g. `YourProject/Plugins/FulcrumLite/`.
+### Quick install (one command)
+
+Open **Command Prompt** inside your project's `Plugins/` folder and run the line for your engine version:
+
+```cmd
+:: Unreal Engine 5.8
+curl -L -o fl.zip https://github.com/mihirbathani/fulcrum-lite/releases/download/v1.0.0-5.8/FulcrumLite-1.0.0-UE5.8.zip && tar -xf fl.zip && del fl.zip
+```
+
+```cmd
+:: Unreal Engine 5.6
+curl -L -o fl.zip https://github.com/mihirbathani/fulcrum-lite/releases/download/v1.0.0-5.6/FulcrumLite-1.0.0-UE5.6.zip && tar -xf fl.zip && del fl.zip
+```
+
+`curl` and `tar` ship with Windows 10/11 — no extra tools needed. This drops a `FulcrumLite/` folder straight into `Plugins/`.
+
+With Git you can instead clone the branch for your engine:
+
+```cmd
+git clone -b 5.8 https://github.com/mihirbathani/fulcrum-lite.git FulcrumLite
+```
+
+### Manual install
+
+1. Download the `.zip` for your engine from [Releases](../../releases) (or copy this plugin folder) into your project's `Plugins/` folder, e.g. `YourProject/Plugins/FulcrumLite/`.
 2. Right-click your `.uproject` → **Generate Visual Studio project files**, then build — or just open the project and let the editor compile it.
 3. Open the tool from **Tools → Fulcrum Lite**.
 
