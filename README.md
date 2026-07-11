@@ -21,7 +21,25 @@ Fulcrum Lite drops the advanced tools — non-destructive mode, custom move/rota
 
 ## Installation
 
-1. Copy this plugin into your project's `Plugins/` folder, e.g. `YourProject/Plugins/FulcrumLite/`.
+### Quick install (one command)
+
+Open **Command Prompt** inside your project's `Plugins/` folder and run:
+
+```cmd
+curl -L -o fl.zip https://github.com/mihirbathani/fulcrum-lite/releases/download/v1.0.0-5.6/FulcrumLite-1.0.0-UE5.6.zip && tar -xf fl.zip && del fl.zip
+```
+
+`curl` and `tar` ship with Windows 10/11 — no extra tools needed. This drops a `FulcrumLite/` folder straight into `Plugins/`.
+
+With Git you can instead clone this branch:
+
+```cmd
+git clone -b 5.6 https://github.com/mihirbathani/fulcrum-lite.git FulcrumLite
+```
+
+### Manual install
+
+1. Download the 5.6 `.zip` from [Releases](../../releases/tag/v1.0.0-5.6) (or copy this plugin folder) into your project's `Plugins/` folder, e.g. `YourProject/Plugins/FulcrumLite/`.
 2. Right-click your `.uproject` → **Generate Visual Studio project files**, then build — or just open the project and let the editor compile it.
 3. Open the tool from **Tools → Fulcrum Lite**.
 
