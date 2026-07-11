@@ -62,3 +62,9 @@ Check out the branch that matches your engine. `main` holds the shared source.
 ## Author
 
 Made by **Mihir Bathani** — [www.mihirbathani.com](https://www.mihirbathani.com)
+
+## License
+
+Fulcrum Lite is proprietary software. See [LICENSE.txt](LICENSE.txt) for the full terms — a single-seat, non-redistributable license.
+
+© 2026 Mihir Bathani. All Rights Reserved.
