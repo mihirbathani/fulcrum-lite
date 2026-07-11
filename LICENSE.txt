@@ -1,0 +1,54 @@
+Fulcrum Lite - End User License Agreement
+Copyright (c) 2026 Mihir Bathani. All Rights Reserved.
+
+This software ("Fulcrum Lite", the "Plugin") is licensed, not sold.
+
+1. GRANT OF LICENSE
+Upon valid purchase, Mihir Bathani ("the Author") grants you ("the Licensee") a
+non-exclusive, non-transferable license to install and use one (1) copy of the
+Plugin per purchased seat, solely within your own Unreal Engine projects, whether
+personal or commercial.
+
+2. PERMITTED USE
+You MAY:
+  - Use the Plugin in an unlimited number of your own Unreal Engine projects.
+  - Ship games or applications you develop with the Plugin in a compiled/packaged
+    form, where the Plugin's source is not exposed.
+
+3. RESTRICTIONS
+You MAY NOT:
+  - Redistribute, resell, sublicense, rent, lease, lend, or otherwise share the
+    Plugin or its source code, in whole or in part, with any third party.
+  - Publish or upload the Plugin or its source code to any public or private
+    repository, marketplace, forum, or file-sharing service.
+  - Distribute the Plugin as a standalone product, or as part of an asset pack,
+    plugin bundle, template, or development kit intended for other developers.
+  - Remove, alter, or obscure any copyright, trademark, or proprietary notices.
+  - Reverse engineer, decompile, or disassemble the Plugin, except to the extent
+    expressly permitted by applicable law.
+
+4. OWNERSHIP
+The Plugin is and remains the sole property of the Author. This license transfers
+no ownership of any intellectual property. All rights not expressly granted are
+reserved by the Author.
+
+5. NO WARRANTY
+THE PLUGIN IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE
+FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM, OUT OF, OR IN CONNECTION
+WITH THE PLUGIN OR THE USE OR OTHER DEALINGS IN THE PLUGIN.
+
+6. TERMINATION
+This license is effective until terminated. It terminates automatically, without
+notice, if you breach any of its terms. Upon termination you must cease all use of
+the Plugin and destroy all copies in your possession.
+
+7. MARKETPLACE TERMS
+Where the Plugin is obtained through a marketplace (such as Fab), that
+marketplace's end user license agreement also applies. In the event of a conflict,
+the more restrictive terms govern.
+
+For licensing inquiries, contact: www.mihirbathani.com
+
+Fulcrum Lite (c) 2026 Mihir Bathani. All Rights Reserved.

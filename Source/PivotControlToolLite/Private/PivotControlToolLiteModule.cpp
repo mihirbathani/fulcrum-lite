@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Mihir Bathani. All Rights Reserved.
+
 #include "PivotControlToolLiteModule.h"
 #include "SPivotControlPanel.h"
 

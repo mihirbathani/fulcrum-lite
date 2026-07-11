@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Mihir Bathani. All Rights Reserved.
+
 #include "SPivotControlPanel.h"
 #include "PivotOffsetLibrary.h"
 
