@@ -6,16 +6,18 @@
 #include "Widgets/Layout/SUniformGridPanel.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
-#include "Widgets/Layout/SExpandableArea.h"
+#include "Widgets/Layout/SSeparator.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SHyperlink.h"
+#include "Widgets/Images/SImage.h"
 #include "Widgets/Colors/SColorBlock.h"
 #include "Widgets/SBoxPanel.h"
 #include "Styling/AppStyle.h"
 #include "Styling/CoreStyle.h"
 #include "Styling/StyleColors.h"
+#include "Styling/SlateStyleRegistry.h"
 
 #include "Editor.h"
 #include "Selection.h"
@@ -43,20 +45,20 @@ namespace PivotToolStyle
 	}
 }
 
-// A Details-panel style category: header bar + indented body.
-static TSharedRef<SExpandableArea> MakeCategory(const FText& Title, TSharedRef<SWidget> Body, bool bCollapsed = false)
+// An all-caps section label with a rule running off to the right, e.g. "PRESETS ———".
+static TSharedRef<SWidget> MakeSectionHeader(const FText& Title)
 {
-	return SNew(SExpandableArea)
-		.InitiallyCollapsed(bCollapsed)
-		.AreaTitle(Title)
-		.AreaTitleFont(FAppStyle::Get().GetFontStyle("DetailsView.CategoryFontStyle"))
-		.BorderImage(FAppStyle::Get().GetBrush("DetailsView.CategoryTop"))
-		.BorderBackgroundColor(FSlateColor(FLinearColor(0.6f, 0.6f, 0.6f, 1.0f)))
-		.HeaderPadding(FMargin(6.0f, 4.0f))
-		.Padding(FMargin(10.0f, 6.0f, 10.0f, 8.0f))
-		.BodyContent()
+	return SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
 		[
-			Body
+			SNew(STextBlock)
+			.Text(Title)
+			.TextStyle(&FAppStyle::Get().GetWidgetStyle<FTextBlockStyle>("SmallText"))
+			.ColorAndOpacity(FSlateColor(FStyleColors::Foreground))
+		]
+		+ SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center).Padding(8.0f, 0.0f, 0.0f, 0.0f)
+		[
+			SNew(SSeparator).Thickness(1.0f)
 		];
 }
 
@@ -86,53 +88,67 @@ void SPivotControlPanel::Construct(const FArguments& InArgs)
 			];
 	};
 
-	// ---- Box picker: a bounding-box outline with nine clickable anchor dots ----
-	// Mirrors Modeling Mode's pivot picker. Each dot sets the in-plane X/Z anchor;
-	// depth is always centered in Lite.
-	auto MakeDot = [this](EPivotAnchor XAnchor, EPivotAnchor ZAnchor, const FText& Tooltip) -> TSharedRef<SWidget>
+	// ---- Preset buttons: a 3x3 grid of labelled anchor tiles ----
+	// Each tile draws a miniature bounding box with a dot marking exactly where the
+	// pivot will land, above a plain-language label. The active preset is filled with
+	// the accent colour so the current choice reads at a glance.
+	auto DotH = [](EPivotAnchor A) { return A == EPivotAnchor::Min ? HAlign_Left : A == EPivotAnchor::Max ? HAlign_Right : HAlign_Center; };
+	auto DotV = [](EPivotAnchor A) { return A == EPivotAnchor::Max ? VAlign_Top  : A == EPivotAnchor::Min ? VAlign_Bottom : VAlign_Center; };
+
+	auto MakePresetTile = [this, &DotH, &DotV](EPivotAnchor X, EPivotAnchor Z, const FText& Label, const FText& Tooltip) -> TSharedRef<SWidget>
 	{
 		return SNew(SButton)
-			.ButtonStyle(&FAppStyle::Get().GetWidgetStyle<FButtonStyle>("SimpleButton"))
-			.ContentPadding(FMargin(3.0f))
+			.ContentPadding(FMargin(4.0f, 7.0f))
+			.HAlign(HAlign_Center)
+			.VAlign(VAlign_Center)
 			.ToolTipText(Tooltip)
-			.OnClicked(this, &SPivotControlPanel::OnPresetClicked, XAnchor, ZAnchor)
+			.ButtonColorAndOpacity(TAttribute<FSlateColor>::CreateSP(this, &SPivotControlPanel::GetPresetButtonColor, X, Z))
+			.OnClicked(this, &SPivotControlPanel::OnPresetClicked, X, Z)
 			[
-				SNew(SBox).WidthOverride(12.0f).HeightOverride(12.0f)
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center)
 				[
-					SNew(SColorBlock)
-					.Color(TAttribute<FLinearColor>::CreateSP(this, &SPivotControlPanel::GetDotColor, XAnchor, ZAnchor))
+					SNew(SBox).WidthOverride(24.0f).HeightOverride(24.0f)
+					[
+						SNew(SBorder)
+						.BorderImage(FAppStyle::Get().GetBrush("ToolPanel.GroupBorder"))
+						.Padding(FMargin(3.0f))
+						[
+							SNew(SBox).HAlign(DotH(X)).VAlign(DotV(Z))
+							[
+								SNew(SBox).WidthOverride(7.0f).HeightOverride(7.0f)
+								[
+									SNew(SColorBlock)
+									.Color(TAttribute<FLinearColor>::CreateSP(this, &SPivotControlPanel::GetDotColor, X, Z))
+								]
+							]
+						]
+					]
+				]
+				+ SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0.0f, 5.0f, 0.0f, 0.0f)
+				[
+					SNew(STextBlock)
+					.Text(Label)
+					.TextStyle(&FAppStyle::Get().GetWidgetStyle<FTextBlockStyle>("SmallText"))
+					.ColorAndOpacity(TAttribute<FSlateColor>::CreateSP(this, &SPivotControlPanel::GetPresetLabelColor, X, Z))
 				]
 			];
 	};
 
-	auto DotH = [](EPivotAnchor A) { return A == EPivotAnchor::Min ? HAlign_Left : A == EPivotAnchor::Max ? HAlign_Right : HAlign_Center; };
-	auto DotV = [](EPivotAnchor A) { return A == EPivotAnchor::Max ? VAlign_Top  : A == EPivotAnchor::Min ? VAlign_Bottom : VAlign_Center; };
-
-	TSharedRef<SUniformGridPanel> DotGrid = SNew(SUniformGridPanel);
-	auto AddDot = [&](int32 Col, int32 Row, EPivotAnchor X, EPivotAnchor Z, const FText& Tip)
+	TSharedRef<SUniformGridPanel> PresetGrid = SNew(SUniformGridPanel).SlotPadding(FMargin(3.0f));
+	auto AddPreset = [&](int32 Col, int32 Row, EPivotAnchor X, EPivotAnchor Z, const FText& Label, const FText& Tip)
 	{
-		DotGrid->AddSlot(Col, Row).HAlign(DotH(X)).VAlign(DotV(Z))[ MakeDot(X, Z, Tip) ];
+		PresetGrid->AddSlot(Col, Row)[ MakePresetTile(X, Z, Label, Tip) ];
 	};
-	AddDot(0, 0, EPivotAnchor::Min,    EPivotAnchor::Max,    LOCTEXT("TLTip", "Top-left"));
-	AddDot(1, 0, EPivotAnchor::Center, EPivotAnchor::Max,    LOCTEXT("TCTip", "Top-center"));
-	AddDot(2, 0, EPivotAnchor::Max,    EPivotAnchor::Max,    LOCTEXT("TRTip", "Top-right"));
-	AddDot(0, 1, EPivotAnchor::Min,    EPivotAnchor::Center, LOCTEXT("CLTip", "Center-left"));
-	AddDot(1, 1, EPivotAnchor::Center, EPivotAnchor::Center, LOCTEXT("CTip",  "Center"));
-	AddDot(2, 1, EPivotAnchor::Max,    EPivotAnchor::Center, LOCTEXT("CRTip", "Center-right"));
-	AddDot(0, 2, EPivotAnchor::Min,    EPivotAnchor::Min,    LOCTEXT("BLTip", "Bottom-left"));
-	AddDot(1, 2, EPivotAnchor::Center, EPivotAnchor::Min,    LOCTEXT("BCTip", "Bottom-center"));
-	AddDot(2, 2, EPivotAnchor::Max,    EPivotAnchor::Min,    LOCTEXT("BRTip", "Bottom-right"));
-
-	TSharedRef<SWidget> BoxPicker =
-		SNew(SBox).WidthOverride(150.0f).HeightOverride(150.0f)
-		[
-			SNew(SBorder)
-			.BorderImage(FAppStyle::Get().GetBrush("ToolPanel.GroupBorder"))
-			.Padding(FMargin(8.0f))
-			[
-				DotGrid
-			]
-		];
+	AddPreset(0, 0, EPivotAnchor::Min,    EPivotAnchor::Max,    LOCTEXT("TL", "Top Left"),      LOCTEXT("TLTip", "Pivot to the top-left of the mesh bounds"));
+	AddPreset(1, 0, EPivotAnchor::Center, EPivotAnchor::Max,    LOCTEXT("TC", "Top Center"),    LOCTEXT("TCTip", "Pivot to the top-center of the mesh bounds"));
+	AddPreset(2, 0, EPivotAnchor::Max,    EPivotAnchor::Max,    LOCTEXT("TR", "Top Right"),     LOCTEXT("TRTip", "Pivot to the top-right of the mesh bounds"));
+	AddPreset(0, 1, EPivotAnchor::Min,    EPivotAnchor::Center, LOCTEXT("CL", "Left Center"),   LOCTEXT("CLTip", "Pivot to the left-center of the mesh bounds"));
+	AddPreset(1, 1, EPivotAnchor::Center, EPivotAnchor::Center, LOCTEXT("C",  "Center"),        LOCTEXT("CTip",  "Pivot to the center of the mesh bounds"));
+	AddPreset(2, 1, EPivotAnchor::Max,    EPivotAnchor::Center, LOCTEXT("CR", "Right Center"),  LOCTEXT("CRTip", "Pivot to the right-center of the mesh bounds"));
+	AddPreset(0, 2, EPivotAnchor::Min,    EPivotAnchor::Min,    LOCTEXT("BL", "Bottom Left"),   LOCTEXT("BLTip", "Pivot to the bottom-left of the mesh bounds"));
+	AddPreset(1, 2, EPivotAnchor::Center, EPivotAnchor::Min,    LOCTEXT("BC", "Bottom Center"), LOCTEXT("BCTip", "Pivot to the bottom-center of the mesh bounds"));
+	AddPreset(2, 2, EPivotAnchor::Max,    EPivotAnchor::Min,    LOCTEXT("BR", "Bottom Right"),  LOCTEXT("BRTip", "Pivot to the bottom-right of the mesh bounds"));
 
 	// ---- Live target readout: spells out exactly where the pivot will land ----
 	TSharedRef<SWidget> TargetReadout =
@@ -146,52 +162,64 @@ void SPivotControlPanel::Construct(const FArguments& InArgs)
 			.ColorAndOpacity(FSlateColor(FStyleColors::White))
 		];
 
-	TSharedRef<SWidget> PivotBody =
-		SNew(SVerticalBox)
-		+ SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 6.0f)
-		[
-			SNew(STextBlock)
-			.Text(LOCTEXT("PickerHint", "Pick where the pivot sits on the mesh bounds."))
-			.TextStyle(&FAppStyle::Get().GetWidgetStyle<FTextBlockStyle>("SmallText"))
-			.ColorAndOpacity(FSlateColor(FStyleColors::Foreground))
-			.AutoWrapText(true)
-		]
-		+ SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center)[ BoxPicker ]
-		+ SVerticalBox::Slot().AutoHeight().Padding(0.0f, 8.0f, 0.0f, 0.0f)[ TargetReadout ];
-
-	// ---- Selection category body ----
+	// ---- Selection rows ----
 	TSharedRef<SWidget> SelectionBody =
 		SNew(SVerticalBox)
 		+ SVerticalBox::Slot().AutoHeight()[ MakeInfoRow(LOCTEXT("ActorLabel", "Actor"),  TAttribute<FText>::CreateSP(this, &SPivotControlPanel::GetActorSummary)) ]
 		+ SVerticalBox::Slot().AutoHeight()[ MakeInfoRow(LOCTEXT("MeshLabel",  "Mesh"),   TAttribute<FText>::CreateSP(this, &SPivotControlPanel::GetMeshSummary)) ]
 		+ SVerticalBox::Slot().AutoHeight()[ MakeInfoRow(LOCTEXT("OffsetLabel","Pivot"),  TAttribute<FText>::CreateSP(this, &SPivotControlPanel::GetOffsetSummary)) ];
 
-	// ---- Actions category body: Reset + Undo / Redo only ----
-	TSharedRef<SWidget> ActionsBody =
-		SNew(SVerticalBox)
-		+ SVerticalBox::Slot().AutoHeight().Padding(0.0f, 0.0f, 0.0f, 4.0f)
-		[
-			SNew(SButton)
+	// ---- Action tiles: icon over label, matching the preset tiles ----
+	auto MakeActionTile = [](const FName IconName, const FText& Label, const FText& Tooltip, FOnClicked OnClicked) -> TSharedRef<SWidget>
+	{
+		return SNew(SButton)
+			.ContentPadding(FMargin(4.0f, 7.0f))
 			.HAlign(HAlign_Center)
-			.ContentPadding(FMargin(6.0f))
-			.ToolTipText(LOCTEXT("ResetTip", "Restore the pivot to where it was when the mesh was imported"))
-			.Text(LOCTEXT("ResetToOriginal", "Reset to Original Pivot"))
-			.OnClicked(this, &SPivotControlPanel::OnResetClicked)
-		]
-		+ SVerticalBox::Slot().AutoHeight()
+			.VAlign(VAlign_Center)
+			.ToolTipText(Tooltip)
+			.OnClicked(OnClicked)
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center)
+				[
+					SNew(SBox).WidthOverride(16.0f).HeightOverride(16.0f)
+					[
+						SNew(SImage).Image(FAppStyle::Get().GetBrush(IconName))
+					]
+				]
+				+ SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Center).Padding(0.0f, 5.0f, 0.0f, 0.0f)
+				[
+					SNew(STextBlock)
+					.Text(Label)
+					.TextStyle(&FAppStyle::Get().GetWidgetStyle<FTextBlockStyle>("SmallText"))
+				]
+			];
+	};
+
+	TSharedRef<SWidget> ActionsBody =
+		SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot().FillWidth(1.0f).Padding(0.0f, 0.0f, 3.0f, 0.0f)
 		[
-			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot().FillWidth(1.0f).Padding(0.0f, 0.0f, 3.0f, 0.0f)
-			[
-				SNew(SButton).HAlign(HAlign_Center).ContentPadding(FMargin(6.0f))
-				.Text(LOCTEXT("Undo", "Undo")).OnClicked(this, &SPivotControlPanel::OnUndoClicked)
-			]
-			+ SHorizontalBox::Slot().FillWidth(1.0f).Padding(3.0f, 0.0f, 0.0f, 0.0f)
-			[
-				SNew(SButton).HAlign(HAlign_Center).ContentPadding(FMargin(6.0f))
-				.Text(LOCTEXT("Redo", "Redo")).OnClicked(this, &SPivotControlPanel::OnRedoClicked)
-			]
+			MakeActionTile("Icons.Refresh", LOCTEXT("ResetToOriginal", "Reset Pivot"),
+				LOCTEXT("ResetTip", "Restore the pivot to where it was when the mesh was imported"),
+				FOnClicked::CreateSP(this, &SPivotControlPanel::OnResetClicked))
+		]
+		+ SHorizontalBox::Slot().FillWidth(1.0f).Padding(3.0f, 0.0f, 3.0f, 0.0f)
+		[
+			MakeActionTile("GenericCommands.Undo", LOCTEXT("Undo", "Undo"),
+				LOCTEXT("UndoTip", "Undo the last pivot change"),
+				FOnClicked::CreateSP(this, &SPivotControlPanel::OnUndoClicked))
+		]
+		+ SHorizontalBox::Slot().FillWidth(1.0f).Padding(3.0f, 0.0f, 0.0f, 0.0f)
+		[
+			MakeActionTile("GenericCommands.Redo", LOCTEXT("Redo", "Redo"),
+				LOCTEXT("RedoTip", "Redo the last undone pivot change"),
+				FOnClicked::CreateSP(this, &SPivotControlPanel::OnRedoClicked))
 		];
+
+	// ---- Branded header: plugin logo, product name, tagline ----
+	const ISlateStyle* FulcrumStyle = FSlateStyleRegistry::FindSlateStyle("FulcrumLiteStyle");
+	const FSlateBrush* LogoBrush = FulcrumStyle ? FulcrumStyle->GetBrush("FulcrumLite.Logo") : nullptr;
 
 	ChildSlot
 	[
@@ -201,45 +229,62 @@ void SPivotControlPanel::Construct(const FArguments& InArgs)
 		[
 			SNew(SVerticalBox)
 
-			// ---- Compact native header: brand dot + name, subtitle at right ----
+			// ---- Branded header: logo, product name, tagline ----
 			+ SVerticalBox::Slot().AutoHeight()
 			[
 				SNew(SBorder)
 				.BorderImage(FAppStyle::Get().GetBrush("Brushes.Header"))
-				.Padding(FMargin(10.0f, 7.0f))
+				.Padding(FMargin(12.0f, 10.0f))
 				[
 					SNew(SHorizontalBox)
 					+ SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
 					[
-						SNew(SBox).WidthOverride(9.0f).HeightOverride(9.0f)
+						SNew(SBox).WidthOverride(40.0f).HeightOverride(40.0f)
 						[
-							SNew(SColorBlock).Color(PivotToolStyle::Accent())
+							SNew(SImage).Image(LogoBrush)
 						]
 					]
-					+ SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(7.0f, 0.0f, 0.0f, 0.0f)
+					+ SHorizontalBox::Slot().FillWidth(1.0f).VAlign(VAlign_Center).Padding(10.0f, 0.0f, 0.0f, 0.0f)
 					[
-						SNew(STextBlock)
-						.Text(LOCTEXT("Title", "Fulcrum Lite"))
-						.TextStyle(&FAppStyle::Get().GetWidgetStyle<FTextBlockStyle>("NormalText"))
-						.ColorAndOpacity(FSlateColor(FStyleColors::White))
-					]
-					+ SHorizontalBox::Slot().FillWidth(1.0f).HAlign(HAlign_Right).VAlign(VAlign_Center)
-					[
-						SNew(STextBlock)
-						.Text(LOCTEXT("Subtitle", "Pivot tools"))
-						.TextStyle(&FAppStyle::Get().GetWidgetStyle<FTextBlockStyle>("SmallText"))
-						.ColorAndOpacity(FSlateColor(FStyleColors::Foreground))
+						SNew(SVerticalBox)
+						+ SVerticalBox::Slot().AutoHeight()
+						[
+							SNew(STextBlock)
+							.Text(LOCTEXT("Title", "FULCRUM LITE"))
+							.Font(FAppStyle::Get().GetFontStyle("HeadingSmall"))
+							.ColorAndOpacity(FSlateColor(FStyleColors::White))
+						]
+						+ SVerticalBox::Slot().AutoHeight()
+						[
+							SNew(STextBlock)
+							.Text(LOCTEXT("Subtitle", "One-Click Pivot Editor"))
+							.TextStyle(&FAppStyle::Get().GetWidgetStyle<FTextBlockStyle>("SmallText"))
+							.ColorAndOpacity(FSlateColor(FStyleColors::Foreground))
+						]
 					]
 				]
 			]
 
-			// ---- Scrollable body (native Details-panel behaviour) ----
+			// ---- Scrollable body: flat sections with all-caps headers ----
 			+ SVerticalBox::Slot().FillHeight(1.0f)
 			[
 				SNew(SScrollBox)
-				+ SScrollBox::Slot()[ MakeCategory(LOCTEXT("CatSelection", "Selection"),      SelectionBody) ]
-				+ SScrollBox::Slot()[ MakeCategory(LOCTEXT("CatPivot",     "Pivot Position"), PivotBody) ]
-				+ SScrollBox::Slot()[ MakeCategory(LOCTEXT("CatActions",   "Actions"),        ActionsBody) ]
+				+ SScrollBox::Slot().Padding(12.0f, 0.0f, 12.0f, 12.0f)
+				[
+					SNew(SVerticalBox)
+					+ SVerticalBox::Slot().AutoHeight().Padding(0.0f, 12.0f, 0.0f, 6.0f)
+					[ MakeSectionHeader(LOCTEXT("SecSelection", "SELECTION")) ]
+					+ SVerticalBox::Slot().AutoHeight()[ SelectionBody ]
+
+					+ SVerticalBox::Slot().AutoHeight().Padding(0.0f, 14.0f, 0.0f, 6.0f)
+					[ MakeSectionHeader(LOCTEXT("SecPresets", "PRESETS")) ]
+					+ SVerticalBox::Slot().AutoHeight()[ PresetGrid ]
+					+ SVerticalBox::Slot().AutoHeight().Padding(0.0f, 8.0f, 0.0f, 0.0f)[ TargetReadout ]
+
+					+ SVerticalBox::Slot().AutoHeight().Padding(0.0f, 14.0f, 0.0f, 6.0f)
+					[ MakeSectionHeader(LOCTEXT("SecActions", "ACTIONS")) ]
+					+ SVerticalBox::Slot().AutoHeight()[ ActionsBody ]
+				]
 			]
 
 			// ---- Status bar (pinned, native footer style) ----
@@ -551,8 +596,22 @@ FReply SPivotControlPanel::OnPresetClicked(EPivotAnchor XAnchor, EPivotAnchor ZA
 
 FLinearColor SPivotControlPanel::GetDotColor(EPivotAnchor XAnchor, EPivotAnchor ZAnchor) const
 {
+	// On the highlighted (orange) tile the dot switches to white so it stays visible
+	// against the accent fill.
 	const bool bSelected = (XAnchor == SelectedX && ZAnchor == SelectedZ);
-	return bSelected ? PivotToolStyle::Accent() : PivotToolStyle::DotMuted();
+	return bSelected ? FLinearColor::White : PivotToolStyle::Accent();
+}
+
+FSlateColor SPivotControlPanel::GetPresetButtonColor(EPivotAnchor XAnchor, EPivotAnchor ZAnchor) const
+{
+	const bool bSelected = (XAnchor == SelectedX && ZAnchor == SelectedZ);
+	return bSelected ? FSlateColor(FStyleColors::AccentOrange) : FSlateColor(FLinearColor::White);
+}
+
+FSlateColor SPivotControlPanel::GetPresetLabelColor(EPivotAnchor XAnchor, EPivotAnchor ZAnchor) const
+{
+	const bool bSelected = (XAnchor == SelectedX && ZAnchor == SelectedZ);
+	return bSelected ? FSlateColor(FLinearColor::White) : FSlateColor(FStyleColors::Foreground);
 }
 
 FText SPivotControlPanel::GetTargetSummary() const

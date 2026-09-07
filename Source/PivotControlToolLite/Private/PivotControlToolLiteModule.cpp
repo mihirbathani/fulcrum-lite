@@ -43,6 +43,15 @@ void FPivotControlToolLiteModule::RegisterStyle()
 	const FVector2D Icon16(16.0f, 16.0f);
 	StyleSet->Set(FulcrumLiteTabIconName, new FSlateImageBrush(ResourcesDir / TEXT("Icon128.png"), Icon16));
 
+	// Larger icon for the level editor toolbar button, so it reads clearly next to the
+	// engine's own toolbar entries.
+	const FVector2D Icon20(20.0f, 20.0f);
+	StyleSet->Set("FulcrumLite.ToolBarIcon", new FSlateImageBrush(ResourcesDir / TEXT("Icon128.png"), Icon20));
+
+	// Larger logo for the panel's branded header.
+	const FVector2D Icon40(40.0f, 40.0f);
+	StyleSet->Set("FulcrumLite.Logo", new FSlateImageBrush(ResourcesDir / TEXT("Icon128.png"), Icon40));
+
 	FSlateStyleRegistry::RegisterSlateStyle(*StyleSet.Get());
 }
 
@@ -65,8 +74,11 @@ void FPivotControlToolLiteModule::RegisterMenus()
 		return;
 	}
 
-	FToolMenuSection& Section = ToolsMenu->FindOrAddSection("FulcrumLite");
 	const FName TabName = PivotControlTabName;
+
+	// Give the section its own heading so the entry doesn't visually fall under the
+	// preceding menu section's title.
+	FToolMenuSection& Section = ToolsMenu->FindOrAddSection("FulcrumLite", LOCTEXT("FulcrumLiteSection", "Fulcrum"));
 	Section.AddMenuEntry(
 		"OpenFulcrumLite",
 		LOCTEXT("OpenFulcrumLabel", "Fulcrum Lite"),
@@ -76,6 +88,27 @@ void FPivotControlToolLiteModule::RegisterMenus()
 		{
 			FGlobalTabmanager::Get()->TryInvokeTab(TabName);
 		})));
+
+	// One-click button on the main level editor toolbar. "...ToolBar.User" is the
+	// extension point reserved for plugins, so the button lands in the free space to
+	// the right of the built-in toolbar groups.
+	if (UToolMenu* ToolBar = UToolMenus::Get()->ExtendMenu("LevelEditor.LevelEditorToolBar.User"))
+	{
+		FToolMenuSection& ToolBarSection = ToolBar->FindOrAddSection("FulcrumLite");
+		FToolMenuEntry ToolBarEntry = FToolMenuEntry::InitToolBarButton(
+			"OpenFulcrumLiteToolBar",
+			FUIAction(FExecuteAction::CreateLambda([TabName]()
+			{
+				FGlobalTabmanager::Get()->TryInvokeTab(TabName);
+			})),
+			LOCTEXT("FulcrumLiteToolBarLabel", "Fulcrum Lite"),
+			LOCTEXT("FulcrumLiteToolBarTooltip", "Open Fulcrum Lite - reposition a static mesh's pivot in one click"),
+			FSlateIcon(FulcrumLiteStyleName, "FulcrumLite.ToolBarIcon"));
+		// "CalloutToolbar" draws the icon at full size WITH its text label beside it,
+		// instead of the default icon-only slim toolbar button.
+		ToolBarEntry.StyleNameOverride = "CalloutToolbar";
+		ToolBarSection.AddEntry(ToolBarEntry);
+	}
 }
 
 void FPivotControlToolLiteModule::StartupModule()
