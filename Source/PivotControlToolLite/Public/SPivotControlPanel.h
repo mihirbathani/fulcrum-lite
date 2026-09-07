@@ -34,13 +34,21 @@ private:
 	FText GetMeshSummary() const;
 	FText GetOffsetSummary() const;
 
-	// Picker dot supplies the X and Z anchors (depth is always centered in Lite).
+	// Preset button supplies the X and Z anchors (depth is always centered in Lite).
 	FReply OnPresetClicked(EPivotAnchor XAnchor, EPivotAnchor ZAnchor);
 
-	// Colour for a box-picker dot: accent orange when selected, muted grey otherwise.
+	// Colour for a preset button's anchor dot: accent orange when that preset is the
+	// current selection, muted grey otherwise.
 	FLinearColor GetDotColor(EPivotAnchor XAnchor, EPivotAnchor ZAnchor) const;
 
-	// Plain-language "Target: Bottom-Left" readout under the picker.
+	// Tint for a whole preset button: accent orange fill on the active preset so the
+	// current choice reads at a glance, default button colour otherwise.
+	FSlateColor GetPresetButtonColor(EPivotAnchor XAnchor, EPivotAnchor ZAnchor) const;
+
+	// Label colour that stays readable against the highlighted button fill.
+	FSlateColor GetPresetLabelColor(EPivotAnchor XAnchor, EPivotAnchor ZAnchor) const;
+
+	// Plain-language "Target: Bottom-Left" readout under the presets.
 	FText GetTargetSummary() const;
 
 	FReply OnResetClicked();
