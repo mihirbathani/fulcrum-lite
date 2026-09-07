@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0",
+	"VersionName": "1.1",
 	"FriendlyName": "Fulcrum Lite",
 	"Description": "Fulcrum Lite - Reposition a Static Mesh's pivot directly in the editor with one click. Box-picker presets, reset to original pivot, multi-select, and undo/redo, with collision and socket data shifted to match. The mesh always stays in place. No mode switching. A streamlined version of Fulcrum. Copyright (c) 2026 Mihir Bathani. All rights reserved.",
 	"Category": "Editor",
