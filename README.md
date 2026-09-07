@@ -26,7 +26,7 @@ Fulcrum Lite drops the advanced tools — non-destructive mode, custom move/rota
 Open **Command Prompt** inside your project's `Plugins/` folder and run:
 
 ```cmd
-curl -L -o fl.zip https://github.com/mihirbathani/fulcrum-lite/releases/download/v1.0.0-5.8/FulcrumLite-1.0.0-UE5.8.zip && tar -xf fl.zip && del fl.zip
+curl -L -o fl.zip https://github.com/mihirbathani/fulcrum-lite/releases/download/v1.1.0-5.8/FulcrumLite-1.1.0-UE5.8.zip && tar -xf fl.zip && del fl.zip
 ```
 
 `curl` and `tar` ship with Windows 10/11 — no extra tools needed. This drops a `FulcrumLite/` folder straight into `Plugins/`.
