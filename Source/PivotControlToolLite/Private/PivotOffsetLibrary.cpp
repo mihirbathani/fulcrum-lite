@@ -217,6 +217,11 @@ bool FPivotOffsetLibrary::ApplyPivotBake(UStaticMesh* Mesh, const FQuat& ScaledR
 	};
 
 	Mesh->Modify();
+	// CRITICAL for undo: the vertex data lives in separate per-LOD StaticMeshDescription
+	// bulk-data sub-objects, which Modify() on the mesh alone does NOT capture in the
+	// transaction. Without this, Ctrl+Z restores the actor's counter-moved transform but
+	// leaves the baked vertices — the mesh visibly "moves" instead of the pivot reverting.
+	Mesh->ModifyAllMeshDescriptions();
 
 	const int32 NumSourceModels = Mesh->GetNumSourceModels();
 	bool bAnyLodModified = false;
